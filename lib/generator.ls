@@ -11,7 +11,7 @@ pfs = promisifyAll require \fs
 prmdir = promisify require \rimraf
 
 module.exports =
-	generate: (root = "#{__dirname}/../plantuml.docset")->
+	generate: (root = "#{__dirname}/../PlantUML.docset")->
 		prmdir root
 		.then ->
 			getPage ""
