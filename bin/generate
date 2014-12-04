@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+require('LiveScript');
+
+require(__dirname + '/../lib/generator').generate();
