@@ -24,8 +24,8 @@ module.exports =
 #			Promise.all hrefs.slice(0, 2).map (href)->
 				getPage href
 				.then ($)->
-					$content = $ '#content'
-					$content.find( 'div,script').remove!
+					$content = $ 'main'
+					$content.find( 'script').remove!
 
 					name = $content.find 'h1' .text!
 
@@ -48,10 +48,10 @@ module.exports =
 
 					{
 						name
-						html: $content.html!
+						html: $content.html!replace('http://s.plantuml.com/', '')
 						images
 						indexes
-						href
+						href: href + '.html'
 					}
 		.then (pages)->
 			htmlRoot = "#{root}/Contents/Resources/Documents"
@@ -94,7 +94,7 @@ module.exports =
 					result.concat page.images.map (src)->
 						download src
 						.then (body)->
-							target = path.join htmlRoot, src
+							target = path.join htmlRoot, (src.replace /^.+\.com\//, '')
 							<~ pmkdirp (path.dirname target) .then
 							pfs.writeFileAsync target, body
 
@@ -103,6 +103,11 @@ module.exports =
 					result.concat page.indexes.map ->
 						db.query "INSERT INTO searchIndex(name, type, path) VALUES ('#{it.name}', '#{it.type}', '#{it.path}');"
 
+					result.push (download 'http://s.plantuml.com/ge1.css')then (body)->
+						target = path.join htmlRoot, 'style.css'
+						<~ pmkdirp (path.dirname target) .then
+						pfs.writeFileAsync target, body
+
 					result
 		.then ->
 			pfs.writeFileAsync "#{root}/Contents/Info.plist", plistContent
@@ -110,7 +115,7 @@ module.exports =
 function download uri
 	console.log "download #{uri}"
 	prequest do
-		url: "http://www.plantuml.com/#{uri}"
+		url: uri
 		encoding: null
 	.spread (res)->
 		res.body
@@ -136,6 +141,7 @@ template = _.template """
 <head>
 	<meta charset="UTF-8">
 	<title><%=name%></title>
+	<link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <%=html%>
